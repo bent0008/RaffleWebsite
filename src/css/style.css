@@ -1,0 +1,177 @@
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: system-ui, sans-serif;
+  background: #1e1e2f;
+  color: #f0f0f0;
+  padding: 20px;
+  align: center;
+}
+
+.container {
+  display: grid;
+  /*grid-template-columns: 1fr 2fr;*/
+  gap: 20px;
+  max-width: 1200px;
+  margin: auto;
+}
+
+.card {
+  background: #2b2b40;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1e1e2f;
+}
+ 
+::-webkit-scrollbar-thumb {
+  background: #444;
+  border-radius: 30px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+h1, h2 {
+  margin-bottom: 12px;
+}
+
+.muted {
+  color: #aaa;
+}
+
+.small {
+  font-size: 0.85rem;
+}
+
+form .row {
+  display: flex;
+  gap: 12px;
+}
+
+form label {
+  display: block;
+  margin-bottom: 4px;
+  font-weight: bold;
+}
+
+form input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #555;
+  border-radius: 6px;
+  background: #3a3a50;
+  color: #fff;
+}
+
+.btn {
+  display: inline-block;
+  padding: 10px 14px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  background: #444;
+  color: #fff;
+  margin-top: 6px;
+  transition: background 0.2s;
+}
+
+.btn:hover {
+  background: #555;
+}
+
+.btn.primary {
+  background: #0066cc;
+}
+
+.btn.primary:hover {
+  background: #0055aa;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+}
+
+thead {
+  background: #444;
+}
+
+th, td {
+  padding: 8px;
+  border: 1px solid #555;
+  text-align: left;
+}
+
+tr:nth-child(even) {
+  background: #333;
+}
+
+tr.winner {
+  background: #004400 !important;
+  color: #aaffaa;
+  font-weight: bold;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #1e1e2f;
+  color: white;
+  padding: 10px 20px;
+}
+
+.logo {
+  margin: 0;
+}
+
+.login-form {
+  display: flex;
+  gap: 8px;
+}
+
+.login-form input {
+  padding: 5px;
+}
+
+.login-form button {
+  padding: 5px 10px;
+}
+
+#logoutBtn {
+  margin-left: 10px;
+}
+
+#logoutBtn:hover {
+  background: #0066cc;
+  color: white;
+}
+
+#loginBtn:hover {
+  background: #0066cc;
+  color: white;
+}
+
+#draw-section {
+  text-align: center;
+  display: grid;
+  gap: 20px;
+  max-width: 1200px;
+  margin: auto;
+  margin-top: 20px;
+}

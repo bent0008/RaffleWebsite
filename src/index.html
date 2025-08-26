@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<link rel="stylesheet" href="css/style.css" type="text/css">
+	<title>Raffle</title>
+</head>
+
+<header class="header">
+	<h1 class="logo">JaxLUG</h1>
+	<form id="login-form" class="login-form" autocomplete="off">
+		<input type="text" id="username" placeholder="Username" required>
+		<input type="password" id="password" placeholder="Password" required>
+		<button type="submit" id="loginBtn">Login</button>
+	</form>
+	<button id="logoutBtn" class="btn" style="display:none;">Logout</button>
+</header>
+
+<body>
+	<div class="container grid grid-2" role="main">
+		<section class="card" id="entry" aria-labelledby="entry-heading">
+			<h1 id="entry-heading" style="text-align: center;">Raffle Entry</h1>
+
+			<form id="entry-form" autocomplete="off" aria-describedby="entry-help">
+				<div class="row">
+					<div>
+						<label for="name">Name <span style="color:red">*</span></label>
+						<input id="name" name="name" placeholder="johnnyappleseed" required />
+					</div>
+					<div>
+						<label for="email">Email <span></span></label>
+						<input id="email" name="email" type="email" placeholder="johnnyappleseed@example.com" />
+					</div>
+				    <div>
+					      <label for="phone">Phone <span></span></label>
+					      <input id="phone" name="phone" type="tel" placeholder="123-456-7890" />
+				    </div>
+				</div>
+				<p id="no-creds" style="color:red; display:none">Please provide either an email or a phone number.</p>
+				<div class="stack" style="margin-top:12px">
+					<button type="submit" class="btn" aria-label="Add entry">➕ Add Entry</button>
+				</div>
+			</form>
+		</section>
+	</div>
+
+
+	<aside class="card" aria-labelledby="draw-heading" id="draw-section" style="display:none">
+		<div style="margin-top:18px">
+			<h2 style="text-align: center;">Entries (<span id="entry-count">0</span>)</h2>
+			<div class="small muted" id="duplicate-hint"></div>
+				<div style="overflow:auto">
+					<table aria-label="Entries table">
+						<thead>
+							<tr>
+								<th>#</th>
+								<th>Name</th>
+								<th>Email</th>
+								<th>Phone Number</th>
+								<th>Winner</th>
+							</tr>
+						</thead>
+						<tbody id="entry-tbody"></tbody>
+					</table>
+				</div>
+			</div>
+
+		<div class="stack" style="margin-top:12px">
+			<button type="button" class="btn" id="exportCsvBtn">⬇️ Export CSV</button>
+			<button class="btn" id="shuffleBtn" title="Randomize table order (visual)">🔀 Shuffle Rows</button>
+			<button class="btn" id="clearWinnersBtn">❌ Clear Winner</button>
+		</div>
+		<div class="stack" style="margin-bottom:12px">
+			<button class="btn primary" id="drawBtn">🎉 Draw Winner</button>
+		</div>
+	</aside>
+
+
+	<script src="js/raffle.js"></script>
+</body>
+
+
+</html>
