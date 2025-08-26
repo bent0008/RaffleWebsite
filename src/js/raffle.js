@@ -31,6 +31,7 @@ function renderEntries() {
 			<td>${entry.email ? entry.email : ""}</td>
 			<td>${entry.phone ? entry.phone : ""}</td>
 			<td>${new Date(entry.timestamp).toLocaleString()}</td>
+			<td><button class="delete-btn" data-index="${index}">🗑️ Delete</button></td>
 		`;
 
 		if (entry.winner) {
@@ -39,9 +40,9 @@ function renderEntries() {
 
 		tbody.appendChild(row);
 	});
-	countSpan.textContent = entries.length;
+	document.getElementById("entry-count").textContent = entries.length;
 
-	  // Add click listeners for delete buttons
+	// Add click listeners for delete buttons
 	document.querySelectorAll(".delete-btn").forEach(btn => {
     	btn.addEventListener("click", async (e) => {
 			const idx = parseInt(e.target.dataset.index);
@@ -137,28 +138,6 @@ clearWinnersBtn.addEventListener("click", async () => {
 	await autoSave();
 });
 
-// Add Delete Button to Rows
-function renderEntries() {
-  const tbody = document.getElementById("entry-tbody");
-  tbody.innerHTML = "";
-
-  entries.forEach((entry, index) => {
-    const tr = document.createElement("tr");
-
-    tr.innerHTML = `
-      <td>${index + 1}</td>
-      <td>${entry.name}</td>
-      <td>${entry.email || ""}</td>
-      <td>${entry.phone || ""}</td>
-      <td>${entry.winner ? "YES" : "NO"}</td>
-      <td><button class="delete-btn" data-index="${index}">🗑️ Delete</button></td>
-    `;
-
-    tbody.appendChild(tr);
-  });
-
-  document.getElementById("entry-count").textContent = entries.length;
-}
 
 // Shuffle
 shuffleBtn.addEventListener("click", () => {

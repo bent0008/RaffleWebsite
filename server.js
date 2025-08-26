@@ -4,7 +4,7 @@ import path from "path";
 import bodyParser from "body-parser";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
-import { validateLogin } from "./auth.js";
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -20,12 +20,14 @@ app.use(express.json());
 app.use(bodyParser.json());
 
 // CSV Path Within Docker Container
-const DATA_DIR = "/app/data";
-const CSV_FILE = path.join(DATA_DIR, "raffle_entries.csv")
+const dataDir = path.join(process.cwd(), "data"); // docker volume mounted here
+const csvPath = path.join(dataDir, "raffle_entries.csv");
+const authPath = path.join(dataDir, "auth.json");
+
 
 // In case Dir doesn't Exist
-if (!fs.existsSync(DATA_DIR)) {
-  fs.mkdirSync(DATA_DIR, { recursive: true });
+if (!fs.existsSync(dataDir)) {
+  fs.mkdirSync(dataDir, { recursive: true });
 }
 
 // Save raffle entries to CSV
@@ -49,7 +51,7 @@ app.post("/save", (req, res) => {
 
   // Write to /app/data
   try {
-    fs.writeFileSync(CSV_FILE, csv, "utf8");
+    fs.writeFileSync(csvPath, csv, "utf8");
     res.send("CSV saved successfully!");
   } catch (err) {
     console.error("Error writing CSV:", err);
@@ -60,7 +62,15 @@ app.post("/save", (req, res) => {
 // Login endpoint
 app.post("/login", (req, res) => {
   const { username, password } = req.body;
-  if (validateLogin(username, password)) {
+
+  if (!fs.existsSync(authPath)) {
+    return res.status(500).json({ success: false, message: "Auth file missing" });
+  }
+
+  const authData = JSON.parse(fs.readFileSync(authPath, "utf8"));
+  const { username: storedUser, password: storedPass } = authData;
+
+  if (username === storedUser && password === storedPass) {
     res.json({ success: true });
   } else {
     res.status(401).json({ success: false, message: "Invalid credentials" });
