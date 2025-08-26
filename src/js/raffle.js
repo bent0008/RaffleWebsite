@@ -40,26 +40,39 @@ function renderEntries() {
 		tbody.appendChild(row);
 	});
 	countSpan.textContent = entries.length;
+
+	  // Add click listeners for delete buttons
+	document.querySelectorAll(".delete-btn").forEach(btn => {
+    	btn.addEventListener("click", async (e) => {
+			const idx = parseInt(e.target.dataset.index);
+			entries.splice(idx, 1);
+			saveEntries();
+			renderEntries();
+			await autoSave();
+    });
+  });
 }
 
 
 // Export CSV Automatically
 async function autoSave() {
-  try {
-    await fetch("http://localhost:9000/save", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ entries })
-    });
-    console.log("Entries auto-saved");
-  } catch (err) {
-    console.error("Auto-save failed:", err);
-  }
+	try {
+		// Use relative URL to work inside Docker / NGINX
+		const res = await fetch("/save", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ entries })
+		});
+		if (!res.ok) throw new Error(await res.text());
+		console.log("Entries auto-saved");
+	} catch (err) {
+		console.error("Auto-save failed:", err);
+	}
 }
 
 
 // Add entry
-form.addEventListener("submit", (e) => {
+form.addEventListener("submit", async (e) => {
 	e.preventDefault();
 	const name = form.name.value.trim();
 	const email = form.email.value.trim();
@@ -91,7 +104,7 @@ form.addEventListener("submit", (e) => {
 
 	saveEntries();
 	renderEntries();
-	autoSave();
+	await autoSave();
 	form.reset();
 });
 
@@ -110,18 +123,18 @@ drawBtn.addEventListener("click", async () => {
 
 	saveEntries();
 	renderEntries();
-	autoSave();
+	await autoSave();
 
 	alert(`🎉 Winner: ${entries[idx].name} (${entries[idx].email || "no email"}) (${entries[idx].phone || "no phone number"}) `);
 });
 
 // Clear winner
-clearWinnersBtn.addEventListener("click", () => {
+clearWinnersBtn.addEventListener("click", async () => {
 	entries.forEach(e => e.winner = false);
 	winners = [];
 	saveEntries();
 	renderEntries();
-	autoSave();
+	await autoSave();
 });
 
 // Add Delete Button to Rows
@@ -145,17 +158,6 @@ function renderEntries() {
   });
 
   document.getElementById("entry-count").textContent = entries.length;
-
-  // Add click listeners for delete buttons
-  document.querySelectorAll(".delete-btn").forEach(btn => {
-    btn.addEventListener("click", async (e) => {
-      const idx = parseInt(e.target.dataset.index);
-      entries.splice(idx, 1);
-      saveEntries();
-      renderEntries();
-      autoSave();
-    });
-  });
 }
 
 // Shuffle
@@ -178,39 +180,30 @@ document.addEventListener("DOMContentLoaded", () => {
 	const logoutBtn = document.getElementById("logoutBtn");
 	const drawSection = document.getElementById("draw-section");
 
-	// Credentials
-	const SALT = "JaxLUG1586!";
-	const USERNAME_HASH = "246d00e0d3bf10da097f238f124bb3b3c8e3441d64c31abf48cdb0f9cd1760a3";
-	const PASSWORD_HASH = "5fcfce99c98c2605dcf83a28e1ed2807afa5f6682081244b3825e77628244b97";
-
-	async function hashWithSalt(input, salt) {
-		const encoder = new TextEncoder();
-		const data = encoder.encode(input + salt);
-		const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-		return Array.from(new Uint8Array(hashBuffer))
-		.map(b => b.toString(16).padStart(2, "0"))
-		.join("");
-	}
 
 	loginForm.addEventListener("submit", async (e) => {
 		e.preventDefault();
 		const username = document.getElementById("username").value.trim();
 		const password = document.getElementById("password").value.trim();
 
-		// Hash inputs
-		const userHash = await hashWithSalt(username, SALT);
-		const passHash = await hashWithSalt(password, SALT);
-
-
-		if (userHash === USERNAME_HASH && passHash === PASSWORD_HASH) {
-		  // Successful login
-			loginForm.style.display = "none";
-			logoutBtn.style.display = "inline-block";
-			drawSection.style.display = "block";
-		} else {
-			document.getElementById("username").value = "";
-			document.getElementById("password").value = "";
-			alert("Invalid credentials. Try again.");
+		try {
+			const res = await fetch("/login", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ username, password })
+			});
+			const data = await res.json();
+			if (res.ok && data.success) {
+				loginForm.style.display = "none";
+				logoutBtn.style.display = "inline-block";
+				drawSection.style.display = "block";
+			} else {
+				alert("Invalid credentials. Try again.");
+				document.getElementById("username").value = "";
+				document.getElementById("password").value = "";
+			}
+		} catch (err) {
+			console.error("Login error:", err);
 		}
 	});
 

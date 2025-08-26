@@ -19,6 +19,15 @@ app.use(express.static("./src"));
 app.use(express.json());
 app.use(bodyParser.json());
 
+// CSV Path Within Docker Container
+const DATA_DIR = "/app/data";
+const CSV_FILE = path.join(DATA_DIR, "raffle_entries.csv")
+
+// In case Dir doesn't Exist
+if (!fs.existsSync(DATA_DIR)) {
+  fs.mkdirSync(DATA_DIR, { recursive: true });
+}
+
 // Save raffle entries to CSV
 app.post("/save", (req, res) => {
   const entries = req.body.entries;
@@ -38,11 +47,14 @@ app.post("/save", (req, res) => {
   ]);
   const csv = [header, ...rows].map(r => r.join(",")).join("\n");
 
-  // Always overwrite raffle_entries.csv
-  const filePath = path.join(process.cwd(), "raffle_entries.csv");
-  fs.writeFileSync(filePath, csv, "utf8");
-
-  res.send("CSV saved successfully!");
+  // Write to /app/data
+  try {
+    fs.writeFileSync(CSV_FILE, csv, "utf8");
+    res.send("CSV saved successfully!");
+  } catch (err) {
+    console.error("Error writing CSV:", err);
+    res.status(500).send("Failed to save CSV");
+  }
 });
 
 // Login endpoint
