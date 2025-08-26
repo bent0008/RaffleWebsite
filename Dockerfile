@@ -10,13 +10,23 @@ RUN npm install
 
 COPY . .
 
-# Environment var
-ENV PORT=9000
+ENV PORT=9000 \
+    ADMIN_USER=admin \
+    ADMIN_PASS=
 
-# Expose port
+RUN mkdir -p /app/data
+RUN chown -R node:node /app
+
+VOLUME ["/app/data"]
+
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
+
+USER node
+
 EXPOSE 9000
 
-# Run it
 CMD ["npm", "start"]
 
 
