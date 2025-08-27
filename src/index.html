@@ -30,7 +30,7 @@
 					</div>
 					<div>
 						<label for="email">Email <span></span></label>
-						<input id="email" name="email" type="email" placeholder="johnnyappleseed@example.com" />
+						<input id="email" name="email" type="email" placeholder="johnny@example.com" />
 					</div>
 				    <div>
 					      <label for="phone">Phone <span></span></label>
@@ -44,37 +44,6 @@
 			</form>
 		</section>
 	</div>
-
-
-	<aside class="card" aria-labelledby="draw-heading" id="draw-section" style="display:none">
-		<div style="margin-top:18px">
-			<h2 style="text-align: center;">Entries (<span id="entry-count">0</span>)</h2>
-			<div class="small muted" id="duplicate-hint"></div>
-				<div style="overflow:auto">
-					<table aria-label="Entries table">
-						<thead>
-							<tr>
-								<th>#</th>
-								<th>Name</th>
-								<th>Email</th>
-								<th>Phone Number</th>
-								<th>Winner</th>
-							</tr>
-						</thead>
-						<tbody id="entry-tbody"></tbody>
-					</table>
-				</div>
-			</div>
-
-		<div class="stack" style="margin-top:12px">
-			<button type="button" class="btn" id="exportCsvBtn">⬇️ Export CSV</button>
-			<button class="btn" id="shuffleBtn" title="Randomize table order (visual)">🔀 Shuffle Rows</button>
-			<button class="btn" id="clearWinnersBtn">❌ Clear Winner</button>
-		</div>
-		<div class="stack" style="margin-bottom:12px">
-			<button class="btn primary" id="drawBtn">🎉 Draw Winner</button>
-		</div>
-	</aside>
 
 
 	<script src="js/raffle.js"></script>

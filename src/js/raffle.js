@@ -1,206 +1,220 @@
-// Local storage key
-const STORAGE_KEY = "raffleEntries";
-
-// Load existing entries
-let entries = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+let entries = [];
 let winners = [];
 
-// DOM elements
-const form = document.getElementById("entry-form");
-const tbody = document.getElementById("entry-tbody");
-const countSpan = document.getElementById("entry-count");
-const drawBtn = document.getElementById("drawBtn");
-const redrawBtn = document.getElementById("redrawBtn");
-const clearWinnersBtn = document.getElementById("clearWinnersBtn");
-const shuffleBtn = document.getElementById("shuffleBtn");
-const exportCsvBtn = document.getElementById("exportCsvBtn");
-const emailInput = form.email;
-const phoneInput = form.phone;
-const credsMsg = document.getElementById("no-creds");
-
-function validateContact() {
-  const hasEmail = emailInput.value.trim() !== "";
-  const hasPhone = phoneInput.value.trim() !== "";
-  if (!hasEmail && !hasPhone) {
-    emailInput.setCustomValidity("Please provide either an email or a phone number.");
-    phoneInput.setCustomValidity("Please provide either an email or a phone number.");
-    credsMsg.style.display = "block";
-    return false;
-  } else {
-    emailInput.setCustomValidity("");
-    phoneInput.setCustomValidity("");
-    credsMsg.style.display = "none";
-    return true;
-  }
-}
-
-emailInput.addEventListener("input", validateContact);
-phoneInput.addEventListener("input", validateContact);
-
-function saveEntries() {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
-}
-
+// --- Render entries table (admin only) ---
 function renderEntries() {
-        tbody.innerHTML = "";
-        entries.forEach((entry, index) => {
-                const row = document.createElement("tr");
+  const tbody = document.getElementById("entry-tbody");
+  const countSpan = document.getElementById("entry-count");
+  if (!tbody) return;
 
-                row.innerHTML = `
-                        <td>${index + 1}</td>
-                        <td>${entry.name}</td>
-                        <td>${entry.email ? entry.email : ""}</td>
-                        <td>${entry.phone ? entry.phone : ""}</td>
-                        <td>${new Date(entry.timestamp).toLocaleString()}</td>
-                        <td><button class="delete-btn" data-index="${index}">🗑 Delete</button></td>
-                `;
+  tbody.innerHTML = "";
+  entries.forEach((entry, index) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${index + 1}</td>
+      <td>${entry.name}</td>
+      <td>${entry.email || ""}</td>
+      <td>${entry.phone || ""}</td>
+      <td>${entry.winner ? "YES" : "NO"}</td>
+      <td><button class="delete-btn" data-id="${entry.id}">🗑 Delete</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
 
-                if (entry.winner) {
-                        row.classList.add("winner");
-                }
+  if (countSpan) countSpan.textContent = entries.length;
 
-                tbody.appendChild(row);
-        });
-        document.getElementById("entry-count").textContent = entries.length;
-
-        document.querySelectorAll(".delete-btn").forEach(btn => {
-        btn.addEventListener("click", async (e) => {
-                        const idx = parseInt(e.target.dataset.index);
-                        entries.splice(idx, 1);
-                        saveEntries();
-                        renderEntries();
-                        await autoSave();
+  // Delete button
+  tbody.querySelectorAll(".delete-btn").forEach(btn => {
+    btn.addEventListener("click", async (e) => {
+      const id = e.target.dataset.id;
+      try {
+        const res = await fetch(`/delete-entry/${id}`, { method: "DELETE" });
+        if (!res.ok) throw new Error(await res.text());
+        await fetchEntries();
+      } catch (err) {
+        console.error("Delete failed:", err);
+      }
     });
   });
 }
 
-async function autoSave() {
-        try {
-                const res = await fetch("/save", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ entries })
-                });
-                if (!res.ok) throw new Error(await res.text());
-                console.log("Entries auto-saved");
-        } catch (err) {
-                console.error("Auto-save failed:", err);
-        }
+// Fetch entries from server
+async function fetchEntries() {
+  try {
+    const res = await fetch("/entries");
+    if (!res.ok) throw new Error(await res.text());
+    entries = await res.json();
+    renderEntries();
+  } catch (err) {
+    console.error("Failed to fetch entries:", err);
+  }
 }
 
-form.addEventListener("submit", async (e) => {
-        e.preventDefault();
+// Add entry
+async function addEntry(entry) {
+  try {
+    const res = await fetch("/add-entry", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(entry)
+    });
+    if (!res.ok) throw new Error(await res.text());
+    alert("Entry submitted successfully!");
+  } catch (err) {
+    console.error("Failed to submit entry:", err);
+    alert("Failed to submit entry.");
+  }
+}
 
-        if (!validateContact()) {
-                form.reportValidity();
-                return;
-        }
+document.addEventListener("DOMContentLoaded", () => {
 
-        const name = form.name.value.trim();
-        const email = form.email.value.trim();
-        const phone = form.phone.value.trim();
+  const loginForm = document.getElementById("login-form");
+  const logoutBtn = document.getElementById("logoutBtn");
+  const entryForm = document.getElementById("entry-form");
 
-        if (!name) return;
+  // Public entry form
+  if (entryForm) {
+    const emailInput = entryForm.email;
+    const phoneInput = entryForm.phone;
+    const credsMsg   = document.getElementById("no-creds");
 
-        const duplicate = entries.some(
-                (entry) =>
-                entry.name.toLowerCase() === name.toLowerCase() ||
-                (email && entry.email.toLowerCase() === email.toLowerCase()) ||
-                (phone && entry.phone.toLowerCase() === phone.toLowerCase())
-        );
+    function validateContact() {
+      const hasEmail = emailInput.value.trim() !== "";
+      const hasPhone = phoneInput.value.trim() !== "";
+      if (!hasEmail && !hasPhone) {
+        emailInput.setCustomValidity("Please provide either an email or a phone number.");
+        phoneInput.setCustomValidity("Please provide either an email or a phone number.");
+        if (credsMsg) credsMsg.style.display = "block";
+        return false;
+      } else {
+        emailInput.setCustomValidity("");
+        phoneInput.setCustomValidity("");
+        if (credsMsg) credsMsg.style.display = "none";
+        return true;
+      }
+    }
+    emailInput.addEventListener("input", validateContact);
+    phoneInput.addEventListener("input", validateContact);
 
-        if (duplicate) {
-                alert("This name, email, or phone is already entered!\nOnly one person per entry!");
-                form.reset();
-                return;
-        }
+    entryForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!validateContact()) {
+        entryForm.reportValidity();
+        return;
+      }
 
-        entries.push({
-                name,
-                email,
-                phone,
-                timestamp: Date.now(),
-                winner: false
+      const name  = entryForm.name.value.trim();
+      const email = emailInput.value.trim();
+      const phone = phoneInput.value.trim();
+      if (!name) return;
+
+      try {
+        await addEntry({ name, email, phone });
+        entryForm.reset();
+      } catch (err) {
+        console.error(err);
+      }
+    });
+  }
+
+  // Admin login
+  if (loginForm) {
+    loginForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value.trim();
+
+      try {
+        const res = await fetch("/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ username, password })
         });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          window.location.href = "/admin";
+        } else {
+          alert("Invalid credentials. Try again.");
+          loginForm.reset();
+        }
+      } catch (err) {
+        console.error("Login error:", err);
+      }
+    });
+  }
 
-        saveEntries();
+  // Admin page
+  const drawSection      = document.getElementById("draw-section");
+  const exportCsvBtn     = document.getElementById("exportCsvBtn");
+  const shuffleBtn       = document.getElementById("shuffleBtn");
+  const clearWinnersBtn  = document.getElementById("clearWinnersBtn");
+  const drawBtn          = document.getElementById("drawBtn");
+
+  if (drawSection) {
+    fetchEntries();
+
+    // Export CSV
+    if (exportCsvBtn) {
+      exportCsvBtn.addEventListener("click", async () => {
+        try {
+          await fetch("/save", { method: "POST" });
+          alert("CSV saved on server!");
+        } catch (err) {
+          console.error(err);
+        }
+      });
+    }
+
+    // Shuffle entries
+    if (shuffleBtn) {
+      shuffleBtn.addEventListener("click", () => {
+        entries = entries
+          .map(value => ({ value, sort: Math.random() }))
+          .sort((a, b) => a.sort - b.sort)
+          .map(({ value }) => value);
         renderEntries();
-        await autoSave();
-        form.reset();
-});
+      });
+    }
 
-exportCsvBtn.addEventListener("click", autoSave);
+    // Clear winners
+    if (clearWinnersBtn) {
+      clearWinnersBtn.addEventListener("click", async () => {
+        entries.forEach(e => e.winner = false);
+        winners = [];
+        try {
+          await fetch("/save", { method: "POST" });
+          renderEntries();
+        } catch (err) {
+          console.error(err);
+        }
+      });
+    }
 
-drawBtn.addEventListener("click", async () => {
+    // Draw winner
+    if (drawBtn) {
+      drawBtn.addEventListener("click", async () => {
         if (entries.length === 0) return alert("No entries available!");
-
         const idx = Math.floor(Math.random() * entries.length);
         entries[idx].winner = true;
         winners.push(entries[idx]);
 
-        saveEntries();
-        renderEntries();
-        await autoSave();
+        try {
+          await fetch("/save", { method: "POST" });
+          renderEntries();
+          alert(`🎉 Winner: ${entries[idx].name} (${entries[idx].email || "no email"}) (${entries[idx].phone || "no phone"})`);
+        } catch (err) {
+          console.error(err);
+        }
+      });
+    }
 
-        alert(`🎉 Winner: ${entries[idx].name} (${entries[idx].email || "no email"}) (${entries[idx].phone || "no phone number"}) `);
-});
-
-clearWinnersBtn.addEventListener("click", async () => {
-        entries.forEach(e => e.winner = false);
-        winners = [];
-        saveEntries();
-        renderEntries();
-        await autoSave();
-});
-
-shuffleBtn.addEventListener("click", () => {
-        entries = entries
-                .map(value => ({ value, sort: Math.random() }))
-                .sort((a, b) => a.sort - b.sort)
-                .map(({ value }) => value);
-
-        saveEntries();
-        renderEntries();
-});
-
-renderEntries();
-
-document.addEventListener("DOMContentLoaded", () => {
-        const loginForm = document.getElementById("login-form");
-        const logoutBtn = document.getElementById("logoutBtn");
-        const drawSection = document.getElementById("draw-section");
-
-        loginForm.addEventListener("submit", async (e) => {
-                e.preventDefault();
-                const username = document.getElementById("username").value.trim();
-                const password = document.getElementById("password").value.trim();
-
-                try {
-                        const res = await fetch("/login", {
-                                method: "POST",
-                                headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify({ username, password })
-                        });
-                        const data = await res.json();
-                        if (res.ok && data.success) {
-                                loginForm.style.display = "none";
-                                logoutBtn.style.display = "inline-block";
-                                drawSection.style.display = "block";
-                        } else {
-                                alert("Invalid credentials. Try again.");
-                                document.getElementById("username").value = "";
-                                document.getElementById("password").value = "";
-                        }
-                } catch (err) {
-                        console.error("Login error:", err);
-                }
-        });
-
-        logoutBtn.addEventListener("click", () => {
-                loginForm.style.display = "flex";
-                logoutBtn.style.display = "none";
-                drawSection.style.display = "none";
-                document.getElementById("username").value = "";
-                document.getElementById("password").value = "";
-        });
+    // Logout
+    if (logoutBtn) {
+      logoutBtn.addEventListener("click", async () => {
+        await fetch("/logout", { method: "POST", credentials: "include" });
+        window.location.href = "/";
+      });
+    }
+  }
 });
